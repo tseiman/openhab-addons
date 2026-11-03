@@ -21,6 +21,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.velux.internal.VeluxBindingConstants;
 import org.openhab.binding.velux.internal.bridge.slip.FunctionalParameters;
 import org.openhab.binding.velux.internal.things.VeluxKLFAPI.Command;
+import org.openhab.binding.velux.internal.things.VeluxProduct.MovementState;
 import org.openhab.binding.velux.internal.things.VeluxProduct.ProductBridgeIndex;
 import org.openhab.binding.velux.internal.things.VeluxProduct.ProductState;
 import org.slf4j.Logger;
@@ -54,6 +55,7 @@ public class VeluxExistingProducts {
     private Map<String, VeluxProduct> existingProductsByUniqueIndex;
     private Map<Integer, String> bridgeIndexToUniqueIndex;
     private Map<String, VeluxProduct> modifiedProductsByUniqueIndex;
+    private Map<Integer, VeluxProduct> movementProductsByBridgeIndex;
     private int memberCount;
 
     /*
@@ -74,6 +76,7 @@ public class VeluxExistingProducts {
         existingProductsByUniqueIndex = new ConcurrentHashMap<>();
         bridgeIndexToUniqueIndex = new ConcurrentHashMap<>();
         modifiedProductsByUniqueIndex = new ConcurrentHashMap<>();
+        movementProductsByBridgeIndex = new ConcurrentHashMap<>();
         memberCount = 0;
         dirty = true;
         logger.trace("VeluxExistingProducts(constructor) done.");
@@ -146,8 +149,16 @@ public class VeluxExistingProducts {
 
         boolean dirty = false;
 
+        boolean movementDirty = false;
+        if (Command.GW_OPENHAB_RECEIVEONLY == newProduct.getCreatorCommand()) {
+            VeluxProduct previousMovementProduct = movementProductsByBridgeIndex.get(productBridgeIndex.toInt());
+            movementDirty = previousMovementProduct == null
+                    || previousMovementProduct.getMovementState(false) != newProduct.getMovementState(false);
+            movementProductsByBridgeIndex.put(productBridgeIndex.toInt(), newProduct.clone());
+        }
+
         // ignore commands with state 'not used'
-        boolean ignoreNotUsed = (ProductState.NOT_USED == ProductState.of(newProduct.getState()));
+        boolean ignoreNotUsed = ProductState.NOT_USED == ProductState.of(newProduct.getState());
 
         // specially ignore commands from buggy devices (e.g. Somfy) which have bad data
         boolean ignoreSpecial = theProduct.isSomfyProduct()
@@ -155,7 +166,7 @@ public class VeluxExistingProducts {
                 && !VeluxProductPosition.isValid(newProduct.getCurrentPosition())
                 && !VeluxProductPosition.isValid(newProduct.getTarget());
 
-        if ((!ignoreNotUsed) && (!ignoreSpecial)) {
+        if (!ignoreNotUsed && !ignoreSpecial) {
             int newState = newProduct.getState();
             int theState = theProduct.getState();
 
@@ -184,7 +195,7 @@ public class VeluxExistingProducts {
         }
 
         // update modified product database
-        if (dirty) {
+        if (dirty || movementDirty) {
             this.dirty = true;
             String uniqueIndex = theProduct.getProductUniqueIndex();
             logger.trace("update(): updating by UniqueIndex {}.", uniqueIndex);
@@ -201,6 +212,21 @@ public class VeluxExistingProducts {
         }
 
         return true;
+    }
+
+    /**
+     * Return the latest movement state received through the House Status Monitor.
+     */
+    public MovementState getMovementState(ProductBridgeIndex productBridgeIndex, boolean inverted) {
+        VeluxProduct movementProduct = movementProductsByBridgeIndex.get(productBridgeIndex.toInt());
+        return movementProduct == null ? MovementState.UNKNOWN : movementProduct.getMovementState(inverted);
+    }
+
+    /**
+     * Invalidate movement states without altering the product data used by existing channels.
+     */
+    public void invalidateMovementStates() {
+        movementProductsByBridgeIndex.clear();
     }
 
     public VeluxProduct get(String productUniqueIndex) {

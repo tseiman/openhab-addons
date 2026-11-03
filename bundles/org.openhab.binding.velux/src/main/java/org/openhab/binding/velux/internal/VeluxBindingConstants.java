@@ -138,6 +138,7 @@ public class VeluxBindingConstants {
 
     // List of all actuator channel ids
     public static final String CHANNEL_ACTUATOR_POSITION = "position";
+    public static final String CHANNEL_ACTUATOR_MOVEMENT = "movement";
     public static final String CHANNEL_ACTUATOR_STATE = "state";
     public static final String CHANNEL_ACTUATOR_SILENTMODE = "silentMode";
     public static final String CHANNEL_ACTUATOR_LIMIT_MINIMUM = "limitMinimum";
@@ -147,8 +148,8 @@ public class VeluxBindingConstants {
     // List of all virtual shutter channel ids
     public static final String CHANNEL_VSHUTTER_POSITION = "vposition";
 
-    public static final Set<String> POSITION_CHANNELS = Set.of(CHANNEL_ACTUATOR_POSITION, CHANNEL_ACTUATOR_STATE,
-            CHANNEL_VANE_POSITION, CHANNEL_VSHUTTER_POSITION);
+    public static final Set<String> PRODUCT_STATUS_CHANNELS = Set.of(CHANNEL_ACTUATOR_POSITION,
+            CHANNEL_ACTUATOR_MOVEMENT, CHANNEL_ACTUATOR_STATE, CHANNEL_VANE_POSITION, CHANNEL_VSHUTTER_POSITION);
 
     // Helper definitions
     public static final String BINDING_VALUES_SEPARATOR = ",";

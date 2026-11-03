@@ -24,9 +24,11 @@ import org.openhab.binding.velux.internal.handler.utils.Thing2VeluxActuator;
 import org.openhab.binding.velux.internal.things.StatusReply;
 import org.openhab.binding.velux.internal.things.VeluxExistingProducts;
 import org.openhab.binding.velux.internal.things.VeluxProduct;
+import org.openhab.binding.velux.internal.things.VeluxProduct.MovementState;
 import org.openhab.binding.velux.internal.things.VeluxProduct.ProductBridgeIndex;
 import org.openhab.binding.velux.internal.things.VeluxProduct.ProductState;
 import org.openhab.binding.velux.internal.things.VeluxProductPosition;
+import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.StopMoveType;
@@ -96,6 +98,14 @@ final class ChannelActuatorPosition extends ChannelHandlerTemplate {
             }
 
             final VeluxExistingProducts existingProducts = thisBridgeHandler.existingProducts();
+
+            if (CHANNEL_ACTUATOR_MOVEMENT.equals(channelId)) {
+                MovementState movementState = existingProducts.getMovementState(veluxActuator.getProductBridgeIndex(),
+                        veluxActuator.isInverted());
+                newState = movementState == MovementState.UNKNOWN ? UnDefType.UNDEF
+                        : new DecimalType(movementState.value);
+                break;
+            }
 
             GetProduct bcp = null;
             switch (channelId) {
@@ -192,6 +202,9 @@ final class ChannelActuatorPosition extends ChannelHandlerTemplate {
                 newState = UnDefType.UNDEF;
             }
         } while (false); // common exit
+        if (CHANNEL_ACTUATOR_MOVEMENT.equals(channelId) && newState == null) {
+            newState = UnDefType.UNDEF;
+        }
         LOGGER.trace("handleRefresh(): new state for channel id '{}' is '{}'.", channelId, newState);
         return newState;
     }

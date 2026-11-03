@@ -183,11 +183,16 @@ The supported Channels and their associated channel types are shown below.
 | Channel      | Data Type     | Description                                     |
 |--------------|---------------|-------------------------------------------------|
 | position     | Rollershutter | Actual position of the window or device.        |
+| movement     | Number        | Current movement state of the roller shutter.   |
 | limitMinimum | Rollershutter | Minimum limit position of the window or device. |
 | limitMaximum | Rollershutter | Maximum limit position of the window or device. |
 | vanePosition | Dimmer        | Vane position of a Venetian blind. (optional)   |
 
 The `position`, `limitMinimum`, and `limitMaximum` are the same as described above for "window" Things.
+
+The read-only `movement` Channel reports `0` when the KLF 200 confirms that movement has finished, `1` while the roller shutter is moving up, and `2` while it is moving down.
+It reports `UNDEF` when the operating state or direction cannot be determined reliably, including communication errors, invalid or equal current and target positions during execution, and the `WAITING_FOR_POWER` state.
+The `inverted` Thing setting also reverses the reported movement direction so that it remains consistent with the `UP` and `DOWN` commands of the `position` Channel.
 
 The `vanePosition` Channel only applies to Venetian blinds that have tiltable slats.
 The binding detects whether the device supports a vane position, and if so, it adds the `vanePosition` Channel automatically.

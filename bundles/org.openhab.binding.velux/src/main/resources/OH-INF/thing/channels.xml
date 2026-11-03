@@ -162,6 +162,23 @@
 		<state min="0" max="100"/>
 	</channel-type>
 
+	<channel-type id="movement">
+		<item-type>Number</item-type>
+		<label>@text/channel-type.velux.movement.label</label>
+		<description>@text/channel-type.velux.movement.description</description>
+		<category>Blinds</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true" pattern="%d">
+			<options>
+				<option value="0">@text/channel-type.velux.movement.state.option.stopped</option>
+				<option value="1">@text/channel-type.velux.movement.state.option.up</option>
+				<option value="2">@text/channel-type.velux.movement.state.option.down</option>
+			</options>
+		</state>
+	</channel-type>
+
 	<channel-type id="vanePosition">
 		<item-type>Dimmer</item-type>
 		<label>@text/channel-type.velux.vanePosition.label</label>

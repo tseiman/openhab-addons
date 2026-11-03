@@ -18,6 +18,7 @@
 		<semantic-equipment-tag>Blinds</semantic-equipment-tag>
 		<channels>
 			<channel id="position" typeId="position"/>
+			<channel id="movement" typeId="movement"/>
 			<channel id="vanePosition" typeId="vanePosition"/>
 			<channel id="limitMinimum" typeId="limitMinimum"/>
 			<channel id="limitMaximum" typeId="limitMaximum"/>

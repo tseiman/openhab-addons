@@ -103,6 +103,13 @@ public class VeluxProduct {
             if ((value & MANUAL.value) != 0) {
                 return MANUAL;
             }
+            return actionOf(value);
+        }
+
+        /**
+         * Return the action bits without the manual-operation flag.
+         */
+        public static ProductState actionOf(int value) {
             int masked = value & ACTION_MASK;
             for (ProductState state : values()) {
                 if (state.value > DONE.value) {
@@ -125,6 +132,22 @@ public class VeluxProduct {
          */
         public static boolean equivalent(int a, int b) {
             return (a & EQUIVALENT_MASK) == (b & EQUIVALENT_MASK);
+        }
+    }
+
+    /**
+     * Movement state exposed by a roller shutter Thing.
+     */
+    public enum MovementState {
+        STOPPED(0),
+        UP(1),
+        DOWN(2),
+        UNKNOWN(-1);
+
+        public final int value;
+
+        private MovementState(int value) {
+            this.value = value;
         }
     }
 
@@ -418,6 +441,31 @@ public class VeluxProduct {
      */
     public ProductState getProductState() {
         return ProductState.of(state);
+    }
+
+    /**
+     * Derive the movement state from one atomic KLF 200 product status.
+     *
+     * @param inverted whether openHAB's up/down direction is inverted for this Thing
+     * @return the confirmed movement state, or {@link MovementState#UNKNOWN} if it cannot be determined reliably
+     */
+    public MovementState getMovementState(boolean inverted) {
+        if ((state & ProductState.MANUAL.value) != 0) {
+            return MovementState.UNKNOWN;
+        }
+        int action = state & ProductState.ACTION_MASK;
+        if (action == ProductState.DONE.value) {
+            return MovementState.STOPPED;
+        }
+        if (action != ProductState.EXECUTING.value || !VeluxProductPosition.isValid(currentPosition)
+                || !VeluxProductPosition.isValid(targetPosition) || currentPosition == targetPosition) {
+            return MovementState.UNKNOWN;
+        }
+        boolean movingUp = targetPosition < currentPosition;
+        if (inverted) {
+            movingUp = !movingUp;
+        }
+        return movingUp ? MovementState.UP : MovementState.DOWN;
     }
 
     /**
