@@ -297,6 +297,9 @@ final class ChannelActuatorPosition extends ChannelHandlerTemplate {
                         }
                     }
                 }
+                if (success) {
+                    thisBridgeHandler.scheduleHouseStatusRefreshAfterCommand();
+                }
                 LOGGER.debug("handleCommand(): sendCommand() finished {}.",
                         (success ? "successfully" : "with failure"));
             } else {

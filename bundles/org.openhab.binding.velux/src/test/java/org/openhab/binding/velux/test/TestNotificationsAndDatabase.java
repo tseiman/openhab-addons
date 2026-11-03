@@ -302,6 +302,7 @@ public class TestNotificationsAndDatabase {
         assertEquals(ACTUATOR_TYPE_SOMFY, product.getActuatorType());
         assertEquals(UNKNOWN_POSITION, product.getVanePosition());
         assertNull(product.getFunctionalParameters());
+        assertEquals(Command.GW_OPENHAB_RECEIVEONLY, product.getCreatorCommand());
 
         // check negative assertions
         assertNotEquals(VANE_POSITION_A, product.getVanePosition());

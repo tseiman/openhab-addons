@@ -146,6 +146,7 @@ public class VeluxBridgeHandler extends ExtendedBaseBridgeHandler implements Vel
     private VeluxBridge mySlipBridge = new SlipVeluxBridge(this);
     private volatile boolean disposing = false;
     private final Object communicationsJobLock = new Object();
+    private final HouseStatusRefreshPlan commandHouseStatusRefreshPlan = new HouseStatusRefreshPlan();
 
     /*
      * **************************************
@@ -905,6 +906,7 @@ public class VeluxBridgeHandler extends ExtendedBaseBridgeHandler implements Vel
     }
 
     private synchronized void invalidateMovementChannels() {
+        commandHouseStatusRefreshPlan.cancel();
         bridgeParameters.actuators.getChannel().existingProducts.invalidateMovementStates();
         for (ChannelUID linkedChannelUID : BridgeChannels.getAllLinkedChannelUIDs(this)) {
             if (VeluxBindingConstants.CHANNEL_ACTUATOR_MOVEMENT.equals(linkedChannelUID.getId())) {
@@ -924,6 +926,19 @@ public class VeluxBridgeHandler extends ExtendedBaseBridgeHandler implements Vel
         }
         existingProducts().update(product);
         return true;
+    }
+
+    /**
+     * Schedule a bounded House Status refresh burst after a successfully sent actuator command.
+     */
+    void scheduleHouseStatusRefreshAfterCommand() {
+        synchronized (communicationsJobLock) {
+            if (disposing) {
+                return;
+            }
+            commandHouseStatusRefreshPlan.schedule(this::getHouseStatusCommsJob, this::submitCommunicationsJob,
+                    (task, delayMillis) -> scheduler.schedule(task, delayMillis, TimeUnit.MILLISECONDS));
+        }
     }
 
     /**
@@ -977,6 +992,9 @@ public class VeluxBridgeHandler extends ExtendedBaseBridgeHandler implements Vel
                     if (thisBridge.bridgeCommunicate(bcp)) {
                         logger.trace("moveRelative() command {}successfully sent to {}",
                                 bcp.isCommunicationSuccessful() ? "" : "un", getThing().getUID());
+                        if (bcp.isCommunicationSuccessful()) {
+                            scheduleHouseStatusRefreshAfterCommand();
+                        }
                     }
                 }
             });
@@ -1053,6 +1071,9 @@ public class VeluxBridgeHandler extends ExtendedBaseBridgeHandler implements Vel
                 if (thisBridge.bridgeCommunicate(bcp)) {
                     logger.trace("moveMainAndVane() command {}successfully sent to {}",
                             bcp.isCommunicationSuccessful() ? "" : "un", getThing().getUID());
+                    if (bcp.isCommunicationSuccessful()) {
+                        scheduleHouseStatusRefreshAfterCommand();
+                    }
                 }
             });
             return true;

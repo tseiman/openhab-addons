@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
  * Methods in addition to the mentioned interface:
  * <UL>
  * <LI>{@link #getProduct} to retrieve product type.</LI>
- * <LI>{@link #setCreatorCommand} to set the command id that identifies the API on which 'product' will be created.</LI>
  * </UL>
  * <P>
  * NOTE: the class does NOT define a request as it only works as receiver.
@@ -73,7 +72,6 @@ public class SCgetHouseStatus extends GetHouseStatus
     private boolean success = false;
     private boolean finished = false;
 
-    private Command creatorCommand = Command.UNDEFTYPE;
     private VeluxProduct product = VeluxProduct.UNKNOWN;
 
     /*
@@ -132,7 +130,7 @@ public class SCgetHouseStatus extends GetHouseStatus
 
                 // create notification product with the returned values
                 product = new VeluxProduct(VeluxProductName.UNKNOWN, new ProductBridgeIndex(ntfNodeID), ntfState,
-                        ntfCurrentPosition, ntfTarget, ntfFunctionalParameters, creatorCommand);
+                        ntfCurrentPosition, ntfTarget, ntfFunctionalParameters, COMMAND);
 
                 success = true;
                 break;
@@ -161,16 +159,5 @@ public class SCgetHouseStatus extends GetHouseStatus
     public VeluxProduct getProduct() {
         logger.trace("getProduct(): returning {}.", product);
         return product;
-    }
-
-    /**
-     * Change the command id that identifies the API on which 'product' will be created.
-     *
-     * @param creatorCommand the API that will be used to create the product instance.
-     * @return this
-     */
-    public SCgetHouseStatus setCreatorCommand(Command creatorCommand) {
-        this.creatorCommand = creatorCommand;
-        return this;
     }
 }
